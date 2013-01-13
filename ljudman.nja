@@ -1,6 +1,26 @@
 {
+  "mainFile": "ljudman.py", 
   "venv": "", 
+  "relatedProjects": [], 
   "name": "ljudman", 
   "license": "New BSD License", 
+  "url": "", 
+  "pythonPath": "python", 
+  "preExecScript": "", 
+  "programParams": "", 
+  "PYTHONPATH": "", 
+  "supported-extensions": [
+    ".py", 
+    ".html", 
+    ".jpg", 
+    ".png", 
+    ".ui", 
+    ".css", 
+    ".json", 
+    ".js", 
+    ".ini"
+  ], 
+  "project-type": "", 
+  "postExecScript": "", 
   "description": ""
 }
