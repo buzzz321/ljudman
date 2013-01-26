@@ -6,6 +6,32 @@ from gui import Ui_MainWindow
 from PyQt4 import QtCore, QtGui
 
 
+def parse_pulse_data(reg_exps, pulse_data):
+    """ convert pulse audio text data to hash maps
+    
+    Keyword arguments:
+    reg_exps    -- list of hash map containing tag to parse and its regexp.
+                    The first item in the list will be the anchor item the rest
+                    will be the sub items.
+                    [{ tag : 'index', regexp: '.*' }]
+    pulse_data  -- text data output from an pulse audio command
+    
+    """
+    
+    parsed_data = []    
+    for match in reg_exps[0]['regexp'].finditer(pulse_data):
+        appindex = match.group(2)
+        start = match.span()[1]
+        audio_items = {reg_exps[0]['tag']: appindex}
+        for tag in reg_exps[1:]:            
+            tag_value = tag['regexp'].search(pulse_data[start:])
+            tag_value = tag_value.group(1)
+            audio_items[tag['tag']] = tag_value
+            
+        parsed_data.append(audio_items)
+    #print parsed_data
+    return parsed_data
+    
 def parse_sinks(sinks):
     indexfinder = re.compile(r'(?P<index>\s*index\:\s*(\d*))', re.M)
     namefinder = re .compile(r'(?:name\:\s+\<(.*)>)', re.M)
@@ -28,6 +54,12 @@ def get_sinks():
 
     try:
         result = subprocess.check_output([cmd, paramter])
+        parse_pulse_data([
+                          {"tag": 'index',
+                            "regexp": re.compile(r'(?P<index>\s*index\:\s*(\d*))', re.M)},
+                          {"tag": 'name', 
+                           "regexp": re.compile(r'(?:name\:\s+\<(.*)>)', re.M)} 
+                          ], result)
         return parse_sinks(result)
 
     except OSError as e:
@@ -118,7 +150,7 @@ class MyForm(QtGui.QMainWindow):
         paramter = "load-module module-null-sink sink_name=streamer"
 
         try:
-            subprocess.check_output([cmd, paramter])
+            sink_number = subprocess.check_output([cmd, paramter, "shell=True"])
 
         except OSError as e:
             print >>sys.stderr, "Execution failed:", e
