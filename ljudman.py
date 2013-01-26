@@ -29,7 +29,7 @@ def parse_pulse_data(reg_exps, pulse_data):
             audio_items[tag['tag']] = tag_value
             
         parsed_data.append(audio_items)
-    #print parsed_data
+    print parsed_data
     return parsed_data
     
 def parse_sinks(sinks):
@@ -54,38 +54,17 @@ def get_sinks():
 
     try:
         result = subprocess.check_output([cmd, paramter])
-        parse_pulse_data([
+        return parse_pulse_data([
                           {"tag": 'index',
                             "regexp": re.compile(r'(?P<index>\s*index\:\s*(\d*))', re.M)},
                           {"tag": 'name', 
                            "regexp": re.compile(r'(?:name\:\s+\<(.*)>)', re.M)} 
                           ], result)
-        return parse_sinks(result)
 
     except OSError as e:
         print >>sys.stderr, "Execution failed:", e
 
     return []
-
-
-def parse_sink_inputs(sink_inputs):
-
-    indexfinder = re.compile(r'(?P<index>\s*index\:\s*(\d*))', re.M)
-    appnamefinder = re .compile(r'(?:\s*application\.name\s*=\s*\"(.*)")', re.M)  # lint:ok
-    sinkfinder = re .compile(r'(?:sink\:\s+(\d+)\s+\<(.*)>)', re.M)
-    inputs = []
-
-    for match in indexfinder.finditer(sink_inputs):
-        appindex = match.group(2)
-        start = match.span()[1]
-        appname = appnamefinder.search(sink_inputs[start:])
-        appname = appname.group(1)
-        active_sink = sinkfinder.search(sink_inputs[start:])
-        active_sink = active_sink.group(1)
-        inputs.append({'index': appindex, 'appname': appname, 'active_sink': active_sink})  # lint:ok
-
-        #print {'index': appindex, 'appname': appname, 'active_sink': active_sink}  # lint:ok
-    return inputs
 
 
 def get_sink_inputs():
@@ -94,8 +73,15 @@ def get_sink_inputs():
     paramter = "list-sink-inputs"
 
     try:
-        result = subprocess.check_output([cmd, paramter])
-        return parse_sink_inputs(result)
+        result = subprocess.check_output([cmd, paramter])        
+        return parse_pulse_data([
+                             {"tag": 'index',
+                              "regexp": re.compile(r'(?P<index>\s*index\:\s*(\d*))', re.M)},
+                             {"tag": 'appname', 
+                              "regexp": re.compile(r'(?:\s*application\.name\s*=\s*\"(.*)")', re.M)},
+                             {"tag": 'active_sink', 
+                              "regexp": re.compile(r'(?:sink\:\s+(\d+)\s+\<(.*)>)', re.M)} 
+                             ], result)
 
     except OSError as e:
         print >>sys.stderr, "Execution failed:", e
