@@ -29,7 +29,7 @@ def parse_pulse_data(reg_exps, pulse_data):
             audio_items[tag['tag']] = tag_value
             
         parsed_data.append(audio_items)
-    print parsed_data
+    #print parsed_data
     return parsed_data
     
 #===============================================================================
@@ -91,10 +91,6 @@ def get_active_player_programs():
     return []
 
 
-def callbacker():
-    print "hejsan"
-
-
 class MyForm(QtGui.QMainWindow):
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self, parent)
@@ -102,7 +98,7 @@ class MyForm(QtGui.QMainWindow):
         self.ui.setupUi(self)
 
         QtCore.QObject.connect(self.ui.goto_channel_0,
-            QtCore.SIGNAL("clicked()"), callbacker)  # lint:ok
+            QtCore.SIGNAL("clicked()"), self.move_program_to_channel)  # lint:ok
 
         QtCore.QObject.connect(self.ui.create_null,
             QtCore.SIGNAL("clicked()"), self.create_null)  # lint:ok
@@ -114,13 +110,22 @@ class MyForm(QtGui.QMainWindow):
         # Call f() every 5 seconds
         self.channel_timer.start(1000)
 
-    def update_sinks(self, sink_inputs):
-        #old_items = self.ui.sinks.findItems('.*', QtCore.Qt.MatchRegExp)
-        self.ui.sinks.clear()
-
+    def update_sinks(self, sink_inputs):                
         for sink in sink_inputs:
-            item = QtGui.QListWidgetItem("%s" % sink['appname'])
-            self.ui.sinks.addItem(item)
+            old_items = self.ui.sinks.findItems(sink['appname'], QtCore.Qt.MatchFixedString)
+            
+            if not old_items:
+                item = QtGui.QListWidgetItem("%s" % sink['appname'])            
+                self.ui.sinks.addItem(item)
+                
+        for index in range(self.ui.sinks.count()):
+            item = self.ui.sinks.item(index)
+            found = False
+            for sink in sink_inputs:
+                if sink['appname'] == item.text():
+                    found = True
+            if not found:
+                self.ui.sinks.takeItem(index)                
 
     def update_channels(self, channels):
         for channel in channels:
@@ -132,6 +137,9 @@ class MyForm(QtGui.QMainWindow):
 
     def get_active_player_programs(self):
         self.update_sinks(get_active_player_programs())
+        
+    def move_program_to_channel(self):
+        return
 
     def create_null(self):
         cmd = ["pactl"]
