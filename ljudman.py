@@ -32,23 +32,25 @@ def parse_pulse_data(reg_exps, pulse_data):
     print parsed_data
     return parsed_data
     
-def parse_sinks(sinks):
-    indexfinder = re.compile(r'(?P<index>\s*index\:\s*(\d*))', re.M)
-    namefinder = re .compile(r'(?:name\:\s+\<(.*)>)', re.M)
-    sound_channels = []
+#===============================================================================
+# def parse_sound_channels(sinks):
+#    indexfinder = re.compile(r'(?P<index>\s*index\:\s*(\d*))', re.M)
+#    namefinder = re .compile(r'(?:name\:\s+\<(.*)>)', re.M)
+#    sound_channels = []
+# 
+#    for match in indexfinder.finditer(sinks):
+#        appindex = match.group(2)
+#        start = match.span()[1]
+#        name = namefinder.search(sinks[start:])
+#        name = name.group(1)
+#        sound_channels.append({'index': appindex, 'name': name})
+# 
+#        print {'index': appindex, 'name': name}
+#    return sound_channels
+#===============================================================================
 
-    for match in indexfinder.finditer(sinks):
-        appindex = match.group(2)
-        start = match.span()[1]
-        name = namefinder.search(sinks[start:])
-        name = name.group(1)
-        sound_channels.append({'index': appindex, 'name': name})
 
-        print {'index': appindex, 'name': name}
-    return sound_channels
-
-
-def get_sinks():
+def get_sound_channels():
     cmd = "pacmd"
     paramter = "list-sinks"
 
@@ -67,7 +69,7 @@ def get_sinks():
     return []
 
 
-def get_sink_inputs():
+def get_active_player_programs():
 
     cmd = "pacmd"
     paramter = "list-sink-inputs"
@@ -108,7 +110,7 @@ class MyForm(QtGui.QMainWindow):
         # Create a QTimer
         self.channel_timer = QtCore.QTimer()
         # Connect it to f
-        self.channel_timer.timeout.connect(self.get_sink_inputs)
+        self.channel_timer.timeout.connect(self.get_active_player_programs)
         # Call f() every 5 seconds
         self.channel_timer.start(1000)
 
@@ -128,22 +130,22 @@ class MyForm(QtGui.QMainWindow):
             if channel['name'] == 'streamer':
                 self.ui.create_null.setEnabled(False)
 
-    def get_sink_inputs(self):
-        self.update_sinks(get_sink_inputs())
+    def get_active_player_programs(self):
+        self.update_sinks(get_active_player_programs())
 
     def create_null(self):
-        cmd = "pactl"
-        paramter = "load-module module-null-sink sink_name=streamer"
+        cmd = ["pactl"]
+        paramter = ["load-module", "module-null-sink", "sink_name=streamer"]
 
         try:
-            sink_number = subprocess.check_output([cmd, paramter, "shell=True"])
+            sink_number = subprocess.call(cmd + paramter)
 
         except OSError as e:
             print >>sys.stderr, "Execution failed:", e
 
 if __name__ == "__main__":
-    channels = get_sinks()
-    sink_inputs = get_sink_inputs()
+    channels = get_sound_channels()
+    sink_inputs = get_active_player_programs()
     app = QtGui.QApplication(sys.argv)
     myapp = MyForm()
 
