@@ -102,11 +102,11 @@ class MyForm(QtGui.QMainWindow):
 
         QtCore.QObject.connect(self.ui.create_null,
             QtCore.SIGNAL("clicked()"), self.create_null)  # lint:ok
-
+        
         # Create a QTimer
         self.channel_timer = QtCore.QTimer()
         # Connect it to f
-        self.channel_timer.timeout.connect(self.get_active_player_programs)
+        self.channel_timer.timeout.connect(self.update_gui)
         # Call f() every 5 seconds
         self.channel_timer.start(1000)
 
@@ -135,7 +135,7 @@ class MyForm(QtGui.QMainWindow):
             if channel['name'] == 'streamer':
                 self.ui.create_null.setEnabled(False)
 
-    def get_active_player_programs(self):
+    def update_gui(self):
         self.update_sinks(get_active_player_programs())
         
     def move_program_to_channel(self):
